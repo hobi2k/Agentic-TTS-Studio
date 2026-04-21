@@ -1,0 +1,28 @@
+{
+  "name": "agentic-tts-studio-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.39",
+    "langchain": "^0.3.18",
+    "next": "15.2.4",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "typescript": "^5.8.2"
+  },
+  "volta": {
+    "node": "24.13.0"
+  }
+}

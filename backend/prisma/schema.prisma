@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String             @id @default(cuid())
+  email       String             @unique
+  displayName String?
+  role        UserRole           @default(USER)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  presets     VoicePreset[]
+  generations GenerationRecord[]
+}
+
+model VoicePreset {
+  id          String   @id @default(cuid())
+  name        String
+  voiceHint   String
+  notes       String?
+  ownerId     String?
+  owner       User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GenerationRecord {
+  id           String           @id @default(cuid())
+  inputText    String
+  voiceHint    String
+  status       GenerationStatus @default(PENDING)
+  outputPath   String?
+  runtimeMode  String?
+  ownerId      String?
+  owner        User?            @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+model RuntimeModel {
+  id         String   @id @default(cuid())
+  kind       String
+  label      String
+  localPath  String
+  isReady    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum GenerationStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}

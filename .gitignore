@@ -1,6 +1,11 @@
-.next
-node_modules
-.env.local
+/.next
+/node_modules
+frontend/.next
+frontend/node_modules
+frontend/.env.local
+backend/node_modules
+backend/dist
+backend/coverage
 dist
 coverage
 *.log

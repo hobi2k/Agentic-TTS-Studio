@@ -2,9 +2,10 @@
 
 ## 관련 파일
 
-- [app/api/audio/[id]/route.ts](/mnt/d/Agentic-TTS-Studio/app/api/audio/[id]/route.ts)
-- [lib/server/generation-store.ts](/mnt/d/Agentic-TTS-Studio/lib/server/generation-store.ts)
-- [lib/server/filesystem.ts](/mnt/d/Agentic-TTS-Studio/lib/server/filesystem.ts)
+- [audio.controller.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/studio/audio.controller.ts)
+- [generation-store.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/studio/generation-store.ts)
+- [filesystem.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/common/filesystem.ts)
+- [local-runtime.service.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/studio/local-runtime.service.ts)
 
 ## 왜 오디오 전용 API가 필요한가
 
@@ -12,7 +13,7 @@
 
 브라우저의 `<audio>` 태그는 실제 wav 바이너리를 받아야 재생할 수 있습니다.
 
-그래서 `/api/audio/:id` 같은 전용 route가 필요합니다.
+그래서 백엔드에 `/api/audio/:id` 같은 전용 route가 필요합니다.
 
 ## 저장 흐름
 
@@ -55,7 +56,7 @@
 
 ## 오디오 route의 동작
 
-[app/api/audio/[id]/route.ts](/mnt/d/Agentic-TTS-Studio/app/api/audio/[id]/route.ts)는:
+[audio.controller.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/studio/audio.controller.ts)는:
 
 1. id로 메타데이터 JSON을 읽고
 2. 실제 wav 경로를 찾고
@@ -63,3 +64,6 @@
 4. `audio/wav`로 반환합니다
 
 즉 브라우저는 이 route를 통해 파일을 스트리밍받는 셈입니다.
+
+현재 `makeGeneratedAudioCard()`는 이 route를 기준으로 공개 URL을 만듭니다.  
+즉 프런트는 오디오 파일의 실제 저장 경로를 몰라도 되고, 백엔드가 제공하는 URL만 알면 됩니다.

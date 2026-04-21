@@ -2,9 +2,9 @@
 
 ## 관련 파일
 
-- [lib/server/langchain/agent.ts](/mnt/d/Agentic-TTS-Studio/lib/server/langchain/agent.ts)
-- [lib/server/langchain/model.ts](/mnt/d/Agentic-TTS-Studio/lib/server/langchain/model.ts)
-- [lib/server/langchain/tools.ts](/mnt/d/Agentic-TTS-Studio/lib/server/langchain/tools.ts)
+- [chat.service.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/studio/chat.service.ts)
+- [chat.controller.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/studio/chat.controller.ts)
+- [local-runtime.service.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/studio/local-runtime.service.ts)
 
 ## 에이전트란 무엇인가
 
@@ -13,9 +13,12 @@
 중요한 점은:
 
 - 에이전트가 직접 오디오 파일을 만들지는 않습니다
-- 에이전트는 어떤 tool을 쓸지 결정하고, 최종 설명을 구성합니다
+- 에이전트는 어떤 tool을 쓸지 결정하고, 로컬 Gemma에 넘길 계획 프롬프트를 구성합니다
 
 즉 에이전트는 `controller`에 가깝습니다.
+
+다만 현재 위치는 옛 Next.js 서버 내부가 아니라 `backend/src/studio/chat.service.ts`입니다.  
+즉 API는 NestJS가 받고, LangChain 오케스트레이션은 백엔드 서비스에서 실행합니다.
 
 ## `latestUserMessage()`
 
@@ -57,33 +60,39 @@
 
 즉 모델에게 "너는 어떤 방식으로 생각해야 하는가"를 먼저 설명해줍니다.
 
+현재 실제 체인은 `RunnableSequence`로 묶여 있고, 마지막 단계는 `RunnableLambda`를 통해 `LocalRuntimeService.runLocalGemma()`를 호출합니다.
+
 ## 실제 실행 순서
 
 `runStudioAgent()`는 대략 이렇게 동작합니다.
 
 1. 최신 사용자 메시지 추출
-2. 프롬프트 생성
-3. tool 배열 준비
-4. 의도 분류
-5. 필요한 tool 실행
-6. Gemma planning 호출
-7. 최종 응답 조합
+2. 의도 분류
+3. `DynamicStructuredTool` 기반 tool 준비
+4. 필요한 tool 실행
+5. `ChatPromptTemplate + RunnableSequence`로 planning 호출
+6. 최종 응답과 `toolTrace` 조합
 
 이 흐름이 중요한 이유는, "실행"과 "설명"을 분리했기 때문입니다.
 
 - tool은 실제 일
 - Gemma는 설명과 계획
 
-## 현재가 진짜 LangChain agent인가
+## 지금 실제로 쓰는 LangChain 요소
 
-엄밀히 말하면 지금 구조는 완전 자동 tool-calling agent보다는 "LangChain을 사용한 오케스트레이션 계층"에 가깝습니다.
+- `ChatPromptTemplate`
+- `RunnableSequence`
+- `RunnableLambda`
+- `DynamicStructuredTool`
 
-하지만 이것이 오히려 초심자에게 좋습니다.
+즉 "LangChain을 일부만 흉내 내는 구조"가 아니라, 실제 LangChain 객체를 사용해 백엔드 에이전트 레이어를 구성하고 있습니다.
 
-왜냐하면 처음부터 너무 복잡한 agent executor를 넣으면:
+다만 현재는 범용 `AgentExecutor`를 쓰는 방식이 아니라, 이 프로젝트에 필요한 흐름을 코드로 명시적으로 조정하는 형태입니다.
 
-- 디버깅이 어려워지고
-- 실제 동작을 이해하기 어렵고
-- 코드가 불필요하게 커지기 때문입니다
+이 방식의 장점:
 
-지금 구조는 "LangChain을 프로젝트에 건강하게 도입하는 첫 단계"로 적절합니다.
+- 어떤 tool이 언제 호출되는지 읽기 쉽습니다
+- 백엔드 빌드와 타입체크를 비교적 안정적으로 유지할 수 있습니다
+- 초심자가 LangChain의 핵심 조각을 단계적으로 배우기 좋습니다
+
+한 줄로 정리하면, 현재 구조는 "NestJS 백엔드 안에서 LangChain의 prompt, runnable, structured tool을 실제로 사용하는 명시적 에이전트 계층"입니다.

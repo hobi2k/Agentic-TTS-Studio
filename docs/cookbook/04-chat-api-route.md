@@ -2,19 +2,21 @@
 
 ## 관련 파일
 
-- [app/api/chat/route.ts](/mnt/d/Agentic-TTS-Studio/app/api/chat/route.ts)
-- [lib/types.ts](/mnt/d/Agentic-TTS-Studio/lib/types.ts)
-- [lib/server/langchain/agent.ts](/mnt/d/Agentic-TTS-Studio/lib/server/langchain/agent.ts)
+- [chat.controller.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/studio/chat.controller.ts)
+- [studio.types.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/studio/studio.types.ts)
+- [chat.service.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/studio/chat.service.ts)
 
 ## `/api/chat`의 역할
 
 이 API는 채팅 요청의 입구입니다.
 
-브라우저에서 사용자가 문장을 보내면, 가장 먼저 이 파일이 요청을 받습니다.
+브라우저에서 사용자가 문장을 보내면, 프런트는 `frontend/lib/api.ts`를 통해 백엔드 `/api/chat`를 호출합니다.
+
+즉 지금은 Next.js `app/api`가 아니라 NestJS controller가 이 요청을 받습니다.
 
 ## 코드가 짧은 이유
 
-[app/api/chat/route.ts](/mnt/d/Agentic-TTS-Studio/app/api/chat/route.ts)는 일부러 짧게 유지했습니다.
+[chat.controller.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/studio/chat.controller.ts)는 일부러 짧게 유지했습니다.
 
 좋은 API route는 보통 아래 역할만 합니다.
 
@@ -27,7 +29,7 @@
 
 ## 입력 검증
 
-이 API는 [lib/types.ts](/mnt/d/Agentic-TTS-Studio/lib/types.ts)의 `chatRequestSchema`를 사용합니다.
+이 API는 [studio.types.ts](/home/hosung/pytorch-demo/Agentic-TTS-Studio/backend/src/studio/studio.types.ts)의 `chatRequestSchema`를 사용합니다.
 
 이게 중요한 이유:
 
@@ -49,7 +51,7 @@
 
 실제 작업은 `runStudioAgent()`가 합니다.
 
-즉 `route.ts`는 입구이고, 에이전트 함수가 본체입니다.
+즉 controller는 입구이고, `ChatService` 안의 LangChain 에이전트 함수가 본체입니다.
 
 이렇게 분리하면 좋은 점:
 

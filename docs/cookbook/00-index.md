@@ -7,7 +7,7 @@
 1. `01-project-map.md`
 2. `02-nextjs-app-router.md`
 3. `03-home-page-and-shell.md`
-4. `04-chat-api-route.md`
+4. `04-backend-api-ownership.md`
 5. `05-langchain-agent.md`
 6. `06-langchain-tools.md`
 7. `07-local-runtime.md`
@@ -15,6 +15,9 @@
 9. `09-docs-route.md`
 10. `10-scripts-and-models.md`
 11. `11-wsl-external-storage-and-recovery.md`
+12. `12-symlink-model-storage.md`
+13. `13-split-frontend-backend-architecture.md`
+14. `14-claude-agents-and-memory.md`
 
 ## 문서 목록
 
@@ -24,19 +27,25 @@
   왜 `app/` 기반 구조를 썼는지, 각 route 파일이 어떤 URL이 되는지 설명합니다.
 - [03-home-page-and-shell.md](./03-home-page-and-shell.md)
   메인 페이지와 채팅 UI가 어떻게 연결되는지 설명합니다.
-- [04-chat-api-route.md](./04-chat-api-route.md)
-  `/api/chat`가 어떤 입력을 받고 어떤 응답을 만드는지 설명합니다.
+- [04-backend-api-ownership.md](./04-backend-api-ownership.md)
+  `frontend`와 `backend`가 현재 어떤 책임을 나눠 가지는지 설명합니다.
 - [05-langchain-agent.md](./05-langchain-agent.md)
-  에이전트 계층이 사용자 메시지를 어떻게 해석하는지 설명합니다.
+  `backend/src/studio/chat.service.ts`의 LangChain 오케스트레이션을 설명합니다.
 - [06-langchain-tools.md](./06-langchain-tools.md)
-  도구 설계와 각 tool의 책임을 설명합니다.
+  `DynamicStructuredTool` 기반 도구 설계와 각 tool의 책임을 설명합니다.
 - [07-local-runtime.md](./07-local-runtime.md)
-  로컬 Gemma/Qwen 런타임과 simulation fallback을 설명합니다.
+  백엔드 런타임 서비스와 simulation fallback을 설명합니다.
 - [08-audio-route-and-storage.md](./08-audio-route-and-storage.md)
-  생성 결과 저장, 오디오 제공 API, 메타데이터 저장을 설명합니다.
+  백엔드 오디오 제공 API와 생성 결과 저장 구조를 설명합니다.
 - [09-docs-route.md](./09-docs-route.md)
   `/docs/*` 페이지가 로컬 markdown 파일을 어떻게 읽는지 설명합니다.
 - [10-scripts-and-models.md](./10-scripts-and-models.md)
   스크립트와 모델 폴더 운영 원칙을 설명합니다.
 - [11-wsl-external-storage-and-recovery.md](./11-wsl-external-storage-and-recovery.md)
   외장하드 저장 전략을 실제로 실행한 기록과 실패 원인, 복구 방법을 설명합니다.
+- [12-symlink-model-storage.md](./12-symlink-model-storage.md)
+  모델 폴더를 외장하드에 두고 심볼릭 링크로 연결하는 방법과 해제/복구 방법을 설명합니다.
+- [13-split-frontend-backend-architecture.md](./13-split-frontend-backend-architecture.md)
+  저장소를 frontend/backend로 분리한 현재 구조와 DB 방향을 설명합니다.
+- [14-claude-agents-and-memory.md](./14-claude-agents-and-memory.md)
+  `.claude` 에이전트와 메모리 문서 구성을 설명합니다.
