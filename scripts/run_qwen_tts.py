@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
-import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -17,12 +16,6 @@ from transformers import AutoConfig, AutoModel, AutoProcessor
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 QWEN_DEMO_ROOT = Path("/home/hosung/pytorch-demo/Qwen3-TTS-Demo")
 QWEN_PACKAGE_ROOT = QWEN_DEMO_ROOT / "Qwen3-TTS"
-RUNTIME_CACHE_ROOT = PROJECT_ROOT / ".cache"
-
-os.environ.setdefault("NUMBA_CACHE_DIR", str(RUNTIME_CACHE_ROOT / "numba"))
-os.environ.setdefault("HF_HOME", str(RUNTIME_CACHE_ROOT / "huggingface"))
-Path(os.environ["NUMBA_CACHE_DIR"]).mkdir(parents=True, exist_ok=True)
-Path(os.environ["HF_HOME"]).mkdir(parents=True, exist_ok=True)
 
 if str(QWEN_PACKAGE_ROOT) not in sys.path and QWEN_PACKAGE_ROOT.exists():
     sys.path.insert(0, str(QWEN_PACKAGE_ROOT))

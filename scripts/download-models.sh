@@ -2,10 +2,10 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DEFAULT_QWEN_DEMO_PYTHON="/home/hosung/pytorch-demo/Qwen3-TTS-Demo/.venv/bin/python"
+DEFAULT_PROJECT_PYTHON="/home/hosung/pytorch-demo/Agentic-TTS-Studio/.venv/bin/python"
 if [[ -z "${PYTHON_BIN:-}" ]]; then
-  if [[ -x "${DEFAULT_QWEN_DEMO_PYTHON}" ]]; then
-    PYTHON_BIN="${DEFAULT_QWEN_DEMO_PYTHON}"
+  if [[ -x "${DEFAULT_PROJECT_PYTHON}" ]]; then
+    PYTHON_BIN="${DEFAULT_PROJECT_PYTHON}"
   else
     PYTHON_BIN="python3"
   fi
