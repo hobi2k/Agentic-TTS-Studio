@@ -26,6 +26,6 @@ export function makeGeneratedAudioCard(record: GeneratedAudioRecord) {
     id: record.id,
     title: `Generated speech · ${record.voiceHint || "default voice"}`,
     url: `${appConfig.apiPublicUrl}/audio/${record.id}`,
-    statusLabel: record.status === "generated" ? "local runtime" : "simulation fallback",
+    statusLabel: "local runtime",
   };
 }

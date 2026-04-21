@@ -58,7 +58,7 @@ export class ChatService {
 
     const generateSpeech = new StructuredToolCtor({
       name: "generate_speech",
-      description: "Generate speech audio from user text using the local TTS runtime or simulation fallback.",
+      description: "Generate speech audio from user text using the local Qwen TTS runtime.",
       schema: z.object({
         text: z.string().min(1),
         voiceHint: z.string().default("default narrator"),

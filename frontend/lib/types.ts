@@ -25,7 +25,6 @@ export type ChatResponse = {
 
 export type RuntimeHealth = {
   runtimeMode: string;
-  simulationMode: boolean;
   modelDirectories: {
     gemma: string;
     qwenTts: string;
@@ -53,6 +52,6 @@ export type GeneratedAudioRecord = {
   voiceHint: string;
   outputPath: string;
   publicUrl: string;
-  status: "generated" | "simulated";
+  status: "generated";
   createdAt: string;
 };

@@ -1,14 +1,11 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, ServiceUnavailableException } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import path from "node:path";
-import { promisify } from "node:util";
 import { appConfig } from "../common/app-config";
-import { ensureDir, pathExists, writeSilentWaveFile } from "../common/filesystem";
+import { ensureDir, pathExists } from "../common/filesystem";
 import { appendGeneratedAudioRecord } from "./generation-store";
 import type { GeneratedAudioRecord, RuntimeHealth } from "./studio.types";
-
-const wait = promisify(setTimeout);
 
 @Injectable()
 export class LocalRuntimeService {
@@ -36,15 +33,19 @@ export class LocalRuntimeService {
     });
   }
 
+  private async assertModelPathExists(label: string, target: string) {
+    if (!(await pathExists(target))) {
+      throw new ServiceUnavailableException(`${label} model directory is missing: ${target}`);
+    }
+  }
+
   async getRuntimeHealth(): Promise<RuntimeHealth> {
     const gemmaExists = await pathExists(appConfig.models.gemma);
     const qwenExists = await pathExists(appConfig.models.qwenTts);
     const whisperExists = await pathExists(appConfig.models.whisper);
-    const simulationMode = appConfig.runtimeMode === "simulation" || !gemmaExists || !qwenExists;
 
     return {
-      runtimeMode: simulationMode ? "simulation" : "local",
-      simulationMode,
+      runtimeMode: "local",
       modelDirectories: {
         gemma: gemmaExists ? appConfig.models.gemma : `${appConfig.models.gemma} (missing)`,
         qwenTts: qwenExists ? appConfig.models.qwenTts : `${appConfig.models.qwenTts} (missing)`,
@@ -56,32 +57,35 @@ export class LocalRuntimeService {
   async runLocalSpeechGeneration(request: { text: string; voiceHint: string }): Promise<GeneratedAudioRecord> {
     const id = randomUUID();
     const outputPath = path.join(appConfig.data.generated, `${id}.wav`);
-    const health = await this.getRuntimeHealth();
 
     await ensureDir(appConfig.data.generated);
+    await this.assertModelPathExists("Qwen TTS", appConfig.models.qwenTts);
 
-    let status: GeneratedAudioRecord["status"] = "generated";
+    const result = await this.runPythonScript(appConfig.scripts.qwenTts, [
+      "--model-dir",
+      appConfig.models.qwenTts,
+      "--text",
+      request.text,
+      "--voice-hint",
+      request.voiceHint,
+      "--output",
+      outputPath,
+    ]);
 
-    if (!health.simulationMode) {
-      const result = await this.runPythonScript(appConfig.scripts.qwenTts, [
-        "--model-dir",
-        appConfig.models.qwenTts,
-        "--text",
-        request.text,
-        "--voice-hint",
-        request.voiceHint,
-        "--output",
-        outputPath,
-      ]);
+    if (result.code !== 0) {
+      throw new InternalServerErrorException(
+        [
+          "Qwen TTS generation failed.",
+          result.stderr.trim(),
+          result.stdout.trim(),
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      );
+    }
 
-      if (result.code !== 0) {
-        status = "simulated";
-        await writeSilentWaveFile(outputPath, 1);
-      }
-    } else {
-      await wait(120);
-      status = "simulated";
-      await writeSilentWaveFile(outputPath, 1);
+    if (!(await pathExists(outputPath))) {
+      throw new InternalServerErrorException(`Qwen TTS did not create an output file: ${outputPath}`);
     }
 
     const record: GeneratedAudioRecord = {
@@ -90,7 +94,7 @@ export class LocalRuntimeService {
       voiceHint: request.voiceHint,
       outputPath,
       publicUrl: `${appConfig.apiPublicUrl}/audio/${id}`,
-      status,
+      status: "generated",
       createdAt: new Date().toISOString(),
     };
 
@@ -99,15 +103,7 @@ export class LocalRuntimeService {
   }
 
   async runLocalGemma(prompt: string) {
-    const health = await this.getRuntimeHealth();
-
-    if (health.simulationMode) {
-      return [
-        "현재 Gemma 로컬 런타임이 준비되지 않았습니다.",
-        "그래도 채팅형 작업 흐름은 계속 진행할 수 있습니다.",
-        "모델이 준비되면 같은 요청이 실제 LangChain + Gemma 계획 실행으로 바뀝니다.",
-      ].join("\n");
-    }
+    await this.assertModelPathExists("Gemma", appConfig.models.gemma);
 
     const result = await this.runPythonScript(appConfig.scripts.gemma, [
       "--model-dir",
@@ -117,9 +113,22 @@ export class LocalRuntimeService {
     ]);
 
     if (result.code !== 0) {
-      return "Gemma 실행에 실패했습니다. 현재는 fallback 응답으로 전환합니다.";
+      throw new InternalServerErrorException(
+        [
+          "Gemma execution failed.",
+          result.stderr.trim(),
+          result.stdout.trim(),
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      );
     }
 
-    return result.stdout.trim() || "Gemma 응답이 비어 있어서 fallback 요약을 사용합니다.";
+    const output = result.stdout.trim();
+    if (!output) {
+      throw new InternalServerErrorException("Gemma returned an empty response.");
+    }
+
+    return output;
   }
 }

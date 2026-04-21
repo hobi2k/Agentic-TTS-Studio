@@ -5,7 +5,6 @@ import type { RuntimeHealth } from "@/lib/types";
 export default async function HomePage() {
   let health: RuntimeHealth = {
     runtimeMode: "unavailable",
-    simulationMode: true,
     modelDirectories: {
       gemma: "backend unavailable",
       qwenTts: "backend unavailable",

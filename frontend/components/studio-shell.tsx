@@ -21,10 +21,10 @@ export function StudioShell({ initialHealth }: { initialHealth: RuntimeHealth })
   const [isPending, startTransition] = useTransition();
 
   const systemSummary = useMemo(() => {
-    return initialHealth.simulationMode
-      ? "현재는 simulation fallback 모드입니다. 모델 폴더를 채우면 실제 런타임으로 전환됩니다."
-      : "로컬 모델 폴더가 감지되었습니다. 실제 음성 생성 런타임을 시도합니다.";
-  }, [initialHealth.simulationMode]);
+    return initialHealth.runtimeMode === "unavailable"
+      ? "백엔드 연결을 확인할 수 없습니다."
+      : "로컬 모델 폴더가 감지되었습니다. 실제 음성 생성 런타임을 사용합니다.";
+  }, [initialHealth.runtimeMode]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
