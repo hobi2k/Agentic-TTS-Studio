@@ -1,26 +1,29 @@
 import { Injectable } from "@nestjs/common";
-import { GenerationStatus } from "@prisma/client";
-import { PrismaService } from "../prisma/prisma.service";
+import { appendGenerationRecord, listGenerationRecords } from "../common/demo-store";
 import { CreateGenerationDto } from "./dto/create-generation.dto";
 
 @Injectable()
 export class GenerationsService {
-  constructor(private readonly prisma: PrismaService) {}
-
   listGenerations() {
-    return this.prisma.generationRecord.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    return listGenerationRecords();
   }
 
   createGeneration(dto: CreateGenerationDto) {
-    return this.prisma.generationRecord.create({
-      data: {
-        inputText: dto.inputText,
-        voiceHint: dto.voiceHint,
-        runtimeMode: dto.runtimeMode || "local",
-        status: GenerationStatus.PENDING,
-      },
+    const now = new Date().toISOString();
+    return appendGenerationRecord({
+      id: `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+      mode: "chat_generation",
+      input_text: dto.inputText,
+      language: "Auto",
+      speaker: null,
+      instruction: dto.voiceHint || null,
+      preset_id: null,
+      output_audio_path: "",
+      output_audio_url: "",
+      source_ref_audio_path: null,
+      source_ref_text: null,
+      created_at: now,
+      meta: { runtime_mode: dto.runtimeMode || "local" },
     });
   }
 }

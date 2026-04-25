@@ -1,0 +1,12 @@
+[
+  {
+    "id": "b6da208f-9a76-4a27-85d0-eb18f3fbcd01",
+    "path": "/home/hosung/pytorch-demo/Agentic-TTS-Studio/data/audio-tools/sound-effect-23fce472-41c9-4c08-bda7-1fc8cea06c9c.wav",
+    "url": "http://127.0.0.1:4010/api/audio/b6da208f-9a76-4a27-85d0-eb18f3fbcd01",
+    "filename": "sound-effect-23fce472-41c9-4c08-bda7-1fc8cea06c9c.wav",
+    "source": "sound-effect",
+    "created_at": "2026-04-25T06:24:59.769Z",
+    "text_preview": "heavy rain with distant thunder",
+    "transcript_text": null
+  }
+]

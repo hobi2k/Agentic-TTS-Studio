@@ -1,27 +1,4 @@
-export type ChatRole = "user" | "assistant" | "system";
-
-export type GeneratedAudioCard = {
-  id: string;
-  title: string;
-  url: string;
-  statusLabel: string;
-};
-
-export type ChatMessage = {
-  id: string;
-  role: ChatRole;
-  content: string;
-  generatedAudio?: GeneratedAudioCard;
-  toolTrace?: string[];
-};
-
-export type ChatResponse = {
-  reply: string;
-  toolTrace: string[];
-  generatedAudio?: GeneratedAudioCard;
-};
-
-export type RuntimeHealth = {
+export type HealthResponse = {
   status: string;
   simulation_mode: boolean;
   runtime_mode: string;
@@ -30,7 +7,7 @@ export type RuntimeHealth = {
   attention_implementation: string;
   recommended_instruction_language: string;
   data_dir: string;
-  modelDirectories: {
+  modelDirectories?: {
     gemma: string;
     qwenTts: string;
     whisper: string;
@@ -82,10 +59,6 @@ export type GenerationRecord = {
   source_ref_text?: string | null;
   created_at: string;
   meta: Record<string, unknown>;
-};
-
-export type GenerationResponse = {
-  record: GenerationRecord;
 };
 
 export type ClonePromptRecord = {
@@ -165,6 +138,13 @@ export type AudioToolCapability = {
   notes: string;
 };
 
+export type VoiceChangerModelInfo = {
+  id: string;
+  label: string;
+  model_path: string;
+  index_path?: string | null;
+};
+
 export type AudioToolAsset = {
   label: string;
   path: string;
@@ -182,15 +162,8 @@ export type AudioToolJob = {
   message: string;
 };
 
-export type VoiceChangerModelInfo = {
-  id: string;
-  label: string;
-  model_path: string;
-  index_path?: string | null;
-};
-
 export type BootstrapResponse = {
-  health: RuntimeHealth;
+  health: HealthResponse;
   models: ModelInfo[];
   speakers: SpeakerInfo[];
   gallery: GenerationRecord[];

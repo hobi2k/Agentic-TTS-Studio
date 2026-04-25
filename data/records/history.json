@@ -1,0 +1,19 @@
+[
+  {
+    "id": "3261d743-3046-4c99-b389-23cfa11d4679",
+    "mode": "custom_voice",
+    "input_text": "실제 백엔드 엔드포인트 검증입니다.",
+    "language": "Auto",
+    "speaker": "sohee",
+    "instruction": "calm korean female narrator",
+    "preset_id": null,
+    "output_audio_path": "/home/hosung/pytorch-demo/Agentic-TTS-Studio/data/generated/3261d743-3046-4c99-b389-23cfa11d4679.wav",
+    "output_audio_url": "http://127.0.0.1:4010/api/audio/3261d743-3046-4c99-b389-23cfa11d4679",
+    "source_ref_audio_path": null,
+    "source_ref_text": null,
+    "created_at": "2026-04-25T06:24:55.925Z",
+    "meta": {
+      "model_id": "/mnt/d/Agentic-TTS-Studio/models/qwen"
+    }
+  }
+]

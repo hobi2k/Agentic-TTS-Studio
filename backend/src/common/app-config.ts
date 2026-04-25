@@ -1,7 +1,11 @@
-import path from "node:path";
+import * as path from "node:path";
+import * as dotenv from "dotenv";
 
 const backendRoot = process.cwd();
 const projectRoot = path.resolve(backendRoot, "..");
+
+dotenv.config({ path: path.join(backendRoot, ".env.local") });
+dotenv.config({ path: path.join(backendRoot, ".env") });
 
 function resolveLocalPath(input: string | undefined, fallback: string) {
   const value = input || fallback;
@@ -23,9 +27,16 @@ export const appConfig = {
     generated: path.join(projectRoot, "data/generated"),
     presets: path.join(projectRoot, "data/presets"),
     uploads: path.join(projectRoot, "data/uploads"),
+    records: path.join(projectRoot, "data/records"),
+    clonePrompts: path.join(projectRoot, "data/clone-prompts"),
+    datasets: path.join(projectRoot, "data/datasets"),
+    finetuneRuns: path.join(projectRoot, "data/finetune-runs"),
+    audioTools: path.join(projectRoot, "data/audio-tools"),
   },
   scripts: {
     gemma: path.join(projectRoot, "scripts/run_gemma_chat.py"),
     qwenTts: path.join(projectRoot, "scripts/run_qwen_tts.py"),
+    whisper: path.join(projectRoot, "scripts/run_whisper_transcribe.py"),
+    audioTools: path.join(projectRoot, "scripts/run_audio_tools.py"),
   },
 };

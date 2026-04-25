@@ -1,11 +1,12 @@
 import { Injectable, InternalServerErrorException, ServiceUnavailableException } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
-import path from "node:path";
+import * as path from "node:path";
 import { appConfig } from "../common/app-config";
-import { ensureDir, pathExists } from "../common/filesystem";
 import { appendGeneratedAudioRecord } from "./generation-store";
+import { ensureDir, pathExists } from "../common/filesystem";
 import type { GeneratedAudioRecord, RuntimeHealth } from "./studio.types";
+import type { ModelInfo, SpeakerInfo } from "../common/demo-types";
 
 @Injectable()
 export class LocalRuntimeService {
@@ -54,7 +55,69 @@ export class LocalRuntimeService {
     };
   }
 
-  async runLocalSpeechGeneration(request: { text: string; voiceHint: string }): Promise<GeneratedAudioRecord> {
+  listModelCatalog(): ModelInfo[] {
+    return [
+      {
+        key: "custom_voice_primary",
+        category: "custom_voice",
+        label: "Qwen3 TTS Custom Voice",
+        model_id: appConfig.models.qwenTts,
+        supports_instruction: true,
+        notes: "로컬 CustomVoice/VoiceDesign 체크포인트를 자동 탐색합니다.",
+        recommended: true,
+        inference_mode: "custom_voice",
+        source: "local",
+        available_speakers: ["sohee", "ryan", "vivian", "serena", "aiden", "ono_anna", "uncle_fu"],
+        default_speaker: "sohee",
+      },
+      {
+        key: "voice_design_primary",
+        category: "voice_design",
+        label: "Qwen3 TTS Voice Design",
+        model_id: appConfig.models.qwenTts,
+        supports_instruction: true,
+        notes: "설명문 기반 voice design 생성에 사용합니다.",
+        recommended: true,
+        inference_mode: "voice_design",
+        source: "local",
+        available_speakers: ["sohee", "ryan", "vivian", "serena", "aiden", "ono_anna", "uncle_fu"],
+        default_speaker: "sohee",
+      },
+      {
+        key: "gemma_4b_it",
+        category: "orchestration",
+        label: "Gemma 3 4B IT",
+        model_id: appConfig.models.gemma,
+        supports_instruction: true,
+        notes: "오케스트레이션 계획 및 번역 보조에 사용합니다.",
+        recommended: true,
+        inference_mode: "chat",
+        source: "local",
+        available_speakers: [],
+        default_speaker: null,
+      },
+    ];
+  }
+
+  listSpeakers(): SpeakerInfo[] {
+    return [
+      { speaker: "sohee", nativeLanguage: "Korean", description: "차분한 한국어 여성 기본 화자" },
+      { speaker: "ryan", nativeLanguage: "English", description: "명료한 영어 남성 화자" },
+      { speaker: "vivian", nativeLanguage: "Chinese", description: "또렷한 중국어 여성 화자" },
+      { speaker: "serena", nativeLanguage: "English", description: "부드러운 영어 여성 화자" },
+      { speaker: "aiden", nativeLanguage: "English", description: "단단한 영어 남성 화자" },
+      { speaker: "ono_anna", nativeLanguage: "Japanese", description: "밝은 일본어 여성 화자" },
+      { speaker: "uncle_fu", nativeLanguage: "Chinese", description: "낮고 안정적인 중국어 남성 화자" },
+    ];
+  }
+
+  async runLocalSpeechGeneration(request: {
+    text: string;
+    voiceHint: string;
+    language?: string;
+    speaker?: string;
+    maxNewTokens?: number;
+  }): Promise<GeneratedAudioRecord> {
     const id = randomUUID();
     const outputPath = path.join(appConfig.data.generated, `${id}.wav`);
 
@@ -68,6 +131,12 @@ export class LocalRuntimeService {
       request.text,
       "--voice-hint",
       request.voiceHint,
+      "--language",
+      request.language || "",
+      "--speaker",
+      request.speaker || "",
+      "--max-new-tokens",
+      String(request.maxNewTokens || 2048),
       "--output",
       outputPath,
     ]);
@@ -130,5 +199,52 @@ export class LocalRuntimeService {
     }
 
     return output;
+  }
+
+  async transcribeAudio(audioPath: string) {
+    await this.assertModelPathExists("Whisper", appConfig.models.whisper);
+
+    const result = await this.runPythonScript(appConfig.scripts.whisper, [
+      "--model-dir",
+      appConfig.models.whisper,
+      "--audio-path",
+      audioPath,
+    ]);
+
+    if (result.code !== 0) {
+      throw new InternalServerErrorException(
+        [
+          "Whisper transcription failed.",
+          result.stderr.trim(),
+          result.stdout.trim(),
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      );
+    }
+
+    try {
+      return JSON.parse(result.stdout.trim()) as { text: string; language?: string | null; model_id?: string | null };
+    } catch {
+      throw new InternalServerErrorException(`Whisper returned invalid JSON: ${result.stdout.trim()}`);
+    }
+  }
+
+  async runAudioTool(command: "sound-effect" | "voice-changer" | "convert" | "separate", args: string[]) {
+    const result = await this.runPythonScript(appConfig.scripts.audioTools, [command, ...args]);
+
+    if (result.code !== 0) {
+      throw new InternalServerErrorException(
+        [
+          `Audio tool '${command}' failed.`,
+          result.stderr.trim(),
+          result.stdout.trim(),
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      );
+    }
+
+    return result.stdout.trim();
   }
 }

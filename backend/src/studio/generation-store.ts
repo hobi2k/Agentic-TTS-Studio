@@ -1,4 +1,4 @@
-import path from "node:path";
+import * as path from "node:path";
 import { appConfig } from "../common/app-config";
 import { ensureDir, readJson, writeJson } from "../common/filesystem";
 import type { GeneratedAudioRecord } from "./studio.types";

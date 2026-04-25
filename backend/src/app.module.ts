@@ -6,6 +6,7 @@ import { PresetsModule } from "./presets/presets.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { RuntimeModule } from "./runtime/runtime.module";
 import { StudioModule } from "./studio/studio.module";
+import { WorkspaceModule } from "./workspace/workspace.module";
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { StudioModule } from "./studio/studio.module";
     HealthModule,
     RuntimeModule,
     StudioModule,
+    WorkspaceModule,
     PresetsModule,
     GenerationsModule,
   ],
