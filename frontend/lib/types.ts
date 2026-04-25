@@ -49,6 +49,8 @@ export type ModelInfo = {
   source: string;
   available_speakers: string[];
   default_speaker?: string | null;
+  model_family?: string | null;
+  speaker_encoder_included?: boolean;
 };
 
 export type SpeakerInfo = {
@@ -155,6 +157,8 @@ export type FineTuneRun = {
   is_selectable?: boolean;
   stage_label?: string;
   summary_label?: string;
+  model_family?: string | null;
+  speaker_encoder_included?: boolean;
 };
 
 export type AudioToolCapability = {

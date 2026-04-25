@@ -4,11 +4,10 @@ import { FormEvent, useEffect, useState, useTransition } from "react";
 import { api } from "@/lib/api";
 import type {
   BootstrapResponse,
-  CharacterPreset,
   ChatMessage,
   ChatResponse,
-  FineTuneDataset,
   GenerationRecord,
+  ModelInfo,
   RuntimeHealth,
 } from "@/lib/types";
 import { DEFAULT_SYSTEM_HINT, PRODUCT_SECTIONS, QUICK_ACTIONS, TAB_DESCRIPTIONS, type StudioTab } from "@/lib/constants";
@@ -89,7 +88,7 @@ export function StudioShell({ initialHealth }: { initialHealth: RuntimeHealth })
   const [isPending, startTransition] = useTransition();
   const [orchestrationInput, setOrchestrationInput] = useState("");
   const [orchestrationVoiceHint, setOrchestrationVoiceHint] = useState("calm-korean-female");
-  const [ttsForm, setTtsForm] = useState({ text: "오늘 회의를 시작하겠습니다.", speaker: "sohee", instruct: "" });
+  const [ttsForm, setTtsForm] = useState({ text: "오늘 회의를 시작하겠습니다.", speaker: "sohee", instruct: "", model_id: "" });
   const [designForm, setDesignForm] = useState({ text: "차갑지만 우아한 서울말 여성 독백 샘플입니다.", instruct: "Cold, elegant, restrained Korean female narration." });
   const [storyForm, setStoryForm] = useState({ text: "첫 장면입니다.\n도시는 비에 젖어 있었습니다.", instruct: "Cinematic Korean female narration.", speaker: "sohee" });
   const [effectsForm, setEffectsForm] = useState({ prompt: "heavy rain with distant thunder", duration_sec: "4", intensity: "0.8" });
@@ -204,6 +203,9 @@ export function StudioShell({ initialHealth }: { initialHealth: RuntimeHealth })
   const history = bootstrap.history;
   const datasets = bootstrap.datasets;
   const recentAudio = bootstrap.audio_assets.slice(0, 6);
+  const voiceboxModels = bootstrap.models.filter(
+    (model) => (model.category || "").includes("voicebox") || (model.label || "").toLowerCase().includes("voicebox"),
+  );
 
   function renderHome() {
     return (
@@ -346,9 +348,40 @@ export function StudioShell({ initialHealth }: { initialHealth: RuntimeHealth })
           className="composer-form"
           onSubmit={(event) => {
             event.preventDefault();
-            void runAction("기본 TTS", () => runGeneration("기본 TTS", api.generateCustomVoice(ttsForm)));
+            void runAction("기본 TTS", () =>
+              runGeneration(
+                "기본 TTS",
+                ttsForm.model_id
+                  ? api.generateWithModel({
+                      model_id: ttsForm.model_id,
+                      text: ttsForm.text,
+                      language: "Auto",
+                      speaker: ttsForm.speaker,
+                      instruct: ttsForm.instruct,
+                    })
+                  : api.generateCustomVoice({
+                      text: ttsForm.text,
+                      language: "Auto",
+                      speaker: ttsForm.speaker,
+                      instruct: ttsForm.instruct,
+                    }),
+              ),
+            );
           }}
         >
+          <label>
+            <span>모델</span>
+            <select value={ttsForm.model_id} onChange={(event) => setTtsForm((current) => ({ ...current, model_id: event.target.value }))}>
+              <option value="">기본 CustomVoice</option>
+              {bootstrap.models
+                .filter((model) => model.inference_mode === "custom_voice" || model.category.includes("voicebox"))
+                .map((model) => (
+                  <option key={model.key} value={model.model_id}>
+                    {model.label}
+                  </option>
+                ))}
+            </select>
+          </label>
           <label>
             <span>텍스트</span>
             <textarea rows={4} value={ttsForm.text} onChange={(event) => setTtsForm((current) => ({ ...current, text: event.target.value }))} />
@@ -681,6 +714,80 @@ export function StudioShell({ initialHealth }: { initialHealth: RuntimeHealth })
     );
   }
 
+  function renderVoicebox() {
+    return (
+      <div className="workspace-panel">
+        <h2>VoiceBox Lab</h2>
+        <p>
+          VoiceBox는 CustomVoice에 Base speaker encoder를 포함시킨 self-contained 체크포인트입니다. 이 프로젝트에서도 `Qwen3-TTS` 폴더 아래에서
+          VoiceBox 전용 진입점을 분리하고, 학습 결과 중 `demo_model_family = voicebox` 체크포인트를 자동 감지합니다.
+        </p>
+        <div className="stack-list stack-list--horizontal">
+          <article className="list-card">
+            <strong>1. CustomVoice 학습</strong>
+            <span>Qwen3-TTS/finetuning/sft_custom_voice_12hz.py 경로를 기준으로 입력 데이터셋을 준비합니다.</span>
+          </article>
+          <article className="list-card">
+            <strong>2. Encoder fusion</strong>
+            <span>Qwen3-TTS/fusion/make_voicebox_checkpoint.py 로 self-contained VoiceBox로 변환합니다.</span>
+          </article>
+          <article className="list-card">
+            <strong>3. VoiceBox 재훈련</strong>
+            <span>Qwen3-TTS/finetuning/sft_voicebox_12hz.py 경로로 VoiceBox -&gt; VoiceBox 추가 학습을 이어갑니다.</span>
+          </article>
+          <article className="list-card">
+            <strong>4. VoiceBox 추론</strong>
+            <span>Qwen3-TTS/inference/voicebox/infer_instruct.py 및 clone 계열 스크립트로 추론합니다.</span>
+          </article>
+        </div>
+        <div className="button-row">
+          <button className="secondary-button" onClick={() => setActiveTab("dataset")}>
+            데이터셋 만들기
+          </button>
+          <button className="secondary-button" onClick={() => setActiveTab("training")}>
+            일반 학습 실행
+          </button>
+          <button className="secondary-button" onClick={() => setActiveTab("clone")}>
+            Voice clone 확인
+          </button>
+          <button className="secondary-button" onClick={() => setActiveTab("projects")}>
+            clone prompt + instruct 확인
+          </button>
+        </div>
+        <section className="workspace-panel">
+          <h2>현재 감지된 VoiceBox 후보</h2>
+          <div className="stack-list">
+            {voiceboxModels.length ? (
+              voiceboxModels.map((model: ModelInfo) => (
+                <article key={model.key} className="list-card">
+                  <strong>{model.label}</strong>
+                  <span>{model.model_id}</span>
+                  <span>{model.notes || "VoiceBox 체크포인트"}</span>
+                  <div className="button-row">
+                    <button
+                      className="secondary-button"
+                      onClick={() => {
+                        setTtsForm((current) => ({ ...current, model_id: model.model_id }));
+                        setActiveTab("tts");
+                      }}
+                    >
+                      추론에서 사용
+                    </button>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <article className="empty-card">
+                <strong>아직 등록된 VoiceBox 체크포인트가 없습니다.</strong>
+                <span>VoiceBox 변환 후 `data/finetune-runs/*/final/config.json`에 `demo_model_family = voicebox`가 있으면 자동 표시됩니다.</span>
+              </article>
+            )}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   function renderActivePanel() {
     switch (activeTab) {
       case "home":
@@ -711,6 +818,8 @@ export function StudioShell({ initialHealth }: { initialHealth: RuntimeHealth })
         return renderDataset();
       case "training":
         return renderTraining();
+      case "voicebox":
+        return renderVoicebox();
       default:
         return renderHome();
     }

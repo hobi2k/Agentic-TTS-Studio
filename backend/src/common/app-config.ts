@@ -39,4 +39,5 @@ export const appConfig = {
     whisper: path.join(projectRoot, "scripts/run_whisper_transcribe.py"),
     audioTools: path.join(projectRoot, "scripts/run_audio_tools.py"),
   },
+  qwen3TtsRoot: path.join(projectRoot, "Qwen3-TTS"),
 };

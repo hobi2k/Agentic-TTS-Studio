@@ -125,12 +125,14 @@ export class WorkspaceController {
     sourceRefAudioPath?: string;
     sourceRefText?: string;
     meta?: Record<string, unknown>;
+    modelDir?: string;
   }) {
     const generated = await this.runtime.runLocalSpeechGeneration({
       text: params.text,
       voiceHint: params.voiceHint,
       language: normalizeLanguage(params.language),
       speaker: params.speaker,
+      modelDir: params.modelDir,
     });
 
     const record: GenerationRecord = {
@@ -214,7 +216,7 @@ export class WorkspaceController {
 
     return {
       health,
-      models: this.runtime.listModelCatalog(),
+      models: await this.runtime.listModelCatalog(),
       speakers: this.runtime.listSpeakers(),
       gallery: history,
       audio_assets: audioAssets,
@@ -371,6 +373,7 @@ export class WorkspaceController {
       instruction: payload.instruct || "",
       speaker: payload.speaker || undefined,
       meta: { model_id: payload.model_id },
+      modelDir: payload.model_id,
     });
   }
 

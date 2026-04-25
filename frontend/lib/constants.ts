@@ -15,7 +15,8 @@ export type StudioTab =
   | "projects"
   | "story"
   | "dataset"
-  | "training";
+  | "training"
+  | "voicebox";
 
 export const PRODUCT_SECTIONS: Array<{
   title: string;
@@ -104,6 +105,11 @@ export const PRODUCT_SECTIONS: Array<{
         label: "학습 실행",
         description: "Qwen TTS 파인튜닝 운영 계획",
       },
+      {
+        key: "voicebox",
+        label: "VoiceBox Lab",
+        description: "self-contained VoiceBox 모델 흐름 관리",
+      },
     ],
   },
 ];
@@ -123,6 +129,7 @@ export const TAB_DESCRIPTIONS: Record<StudioTab, string> = {
   story: "긴 대본을 분할하고 내레이션 스타일을 통일하는 장문 전용 탭입니다.",
   dataset: "데이터셋 구성, 전처리, 학습 전 체크리스트를 정리하는 탭입니다.",
   training: "Qwen TTS 학습 실행 전후의 운영 단계를 정리하고 실행 계획을 세우는 탭입니다.",
+  voicebox: "CustomVoice와 Base speaker encoder를 합친 self-contained VoiceBox 워크플로를 정리하고 추론 후보를 보는 탭입니다.",
 };
 
 export const QUICK_ACTIONS: Array<{ label: string; tab: StudioTab }> = [
